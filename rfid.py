@@ -4,7 +4,7 @@
 HOST = "localhost"
 PORT = 4223
 UID = "uuV" # UID of your NFC/RFID Bricklet
-HTTP_BACKEND = "https://aviatar-smart-fridge.herokuapp.com/api/purchases"
+HTTP_BACKEND = "https://aviatar-fridge.herokuapp.com/api/purchases"
 SALT = "1234567890"
 
 from tinkerforge.ip_connection import IPConnection
