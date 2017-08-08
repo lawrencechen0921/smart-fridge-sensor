@@ -1,27 +1,48 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 HOST = "localhost"
 PORT = 4223
-UID = "uuV" # Change XYZ to the UID of your NFC/RFID Bricklet
+UID = "uuV" # UID of your NFC/RFID Bricklet
+HTTP_BACKEND = "https://aviatar-smart-fridge.herokuapp.com/api/purchases"
+SALT = "1234567890"
 
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_nfc_rfid import BrickletNFCRFID
 import requests
 import time
-
+import hmac
+import hashlib
+import base64
 
 tag_type = 0
 
+#
+# Send scanned id to the backend
+#
 def send_id(id):
-    print("send id " + id)
-    r = requests.post("https://aviatar-smart-fridge.herokuapp.com/api/purchases", data={'id': id})
-    print(r.status_code, r.reason)
-    time.sleep(2)
+    print("Sending ID " + id)
+    try:
+        # Calcualte signature
+        digest = hmac.new(SALT, msg=id, digestmod=hashlib.sha256).digest()
+        signature = base64.b64encode(dig).decode()
+        # Send id to backend
+        response = requests.post(HTTP_BACKEND, data={'id': id, 'signature': signature })
+        # React on errors
+        response.raise_for_status()
+        # Check status
+        if response.status_code = requests.ok.created:
+            print("Success.")
+            time.sleep(2)
+        else:
+            print("Unexpected status code received: ", response.status_code, response.reason)
+    except requests.exceptions.HTTPError as err:
+        print ("Error occured.")
+        print err
 
-
+#
 # Callback function for state changed callback
+#
 def cb_state_changed(state, idle, nr):
     # Cycle through all types
     if idle:
@@ -31,9 +52,8 @@ def cb_state_changed(state, idle, nr):
 
     if state == nr.STATE_REQUEST_TAG_ID_READY:
         ret = nr.get_tag_id()
-        print("Found tag of type " + str(ret.tag_type) + " with ID [" +
-              " ".join(map(str, map(hex, ret.tid[:ret.tid_length]))) + "]")
-	send_id("".join(map(str, map(hex, ret.tid[:ret.tid_length]))))
+        print("Detected tag of type " + str(ret.tag_type) + " with ID [" + " ".join(map(str, map(hex, ret.tid[:ret.tid_length]))) + "]")
+        send_id("".join(map(str, map(hex, ret.tid[:ret.tid_length]))))
 
 if __name__ == "__main__":
     ipcon = IPConnection() # Create IP connection
@@ -51,5 +71,3 @@ if __name__ == "__main__":
 
     raw_input("Press key to exit\n") # Use input() in Python 3
     ipcon.disconnect()
-
-     
