@@ -1,26 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-HOST = "localhost"
-PORT = 4223
-# UID = "uvB" # PLayground
-UID = "uuV" # UID of your NFC/RFID Bricklet
-HTTP_BACKEND = "https://aviatar-fridge.herokuapp.com/api/purchases"
-SALT = "1234567890"
-PIN1 = 7
-PIN2 = 15
-
-# Frequencies
-c = 261
-d = 294
-e = 329
-f = 349
-g = 392
-a = 440
-b = 493
-C = 423
-r = 1
-
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_nfc_rfid import BrickletNFCRFID
 import requests
@@ -28,66 +7,46 @@ import time
 import hmac
 import hashlib
 import base64
-import time
 import datetime
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
+import time
+import os
 
+HOST = "localhost"
+PORT = 4223
+UID = "uuV" # UID of your NFC/RFID Bricklet
+HTTP_BACKEND = "https://aviabar.herokuapp.com/api/purchases"
+SALT = "1234567890"
 tag_type = 0
-
-# pwm = GPIO.PWM(PIN2, 100)
-
-#
-# Beeps using Rapberry PI Piezo Beeper
-#
-def beep(numTimes, speed):
-    GPIO.output(PIN1, True)
-    GPIO.output(PIN2, True)
-    time.sleep(speed) ## Wait
-    p.start(100)             # start the PWM on 100  percent duty cycle
-    p.ChangeDutyCycle(90)   # change the duty cycle to 90%
-    p.ChangeFrequency(c)  # change the frequency to 261 Hz (floats also work)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(d)  # change the frequency to 294 Hz (floats also work)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(e)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(f)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(g)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(a)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(b)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(C)
-    time.sleep(speed) ## Wait
-    p.ChangeFrequency(r)
-    time.sleep(speed) ## Wait
-    p.stop()         # stop the PWM output
-    GPIO.cleanup()
+blocked = False
 
 #
 # Send scanned id to the backend
 #
 def send_id(id):
     try:
+        os.system("python /home/pi/aviabar-sensor/success-beep.py 1")
         timestamp = str(datetime.datetime.now())
         # Calcualte signature
         digest = hmac.new(SALT, msg=id + timestamp, digestmod=hashlib.sha256).digest()
         signature = base64.b64encode(digest).decode()
 
         print("Sending ID: '" + id + "', Time: " + timestamp  + ", Signature: '" + signature + "'")
+        blocked = True
         # Send id to backend
-        response = requests.post(HTTP_BACKEND, data={'id': id, 'time': timestamp, 'signature': signature })
+        response = requests.post(HTTP_BACKEND, data={'id': id, 'time': timestamp, 'signature': signature }, timeout=10.0)
         # React on errors
         response.raise_for_status()
         # Check status
-        if response.status_code == requests.codes.created:
+        if response.status_code == requests.codes.ok:
             print("Success.")
-            time.sleep(2)
         else:
             print("Unexpected status code received: ", response.status_code, response.reason)
+        blocked = False
+        
     except requests.exceptions.HTTPError as err:
+        os.system("python /home/pi/aviabar-sensor/error-beep.py 1")
+        blocked = False
         print ("Error occured.")
         print err
 
@@ -104,13 +63,13 @@ def cb_state_changed(state, idle, nr):
     if state == nr.STATE_REQUEST_TAG_ID_READY:
         ret = nr.get_tag_id()
         print("Detected tag of type " + str(ret.tag_type) + " with ID [" + " ".join(map(str, map(hex, ret.tid[:ret.tid_length]))) + "]")
-        send_id("".join(map(str, map(hex, ret.tid[:ret.tid_length]))))
+        if blocked:
+            print("Blocking duplicate read.")
+        else:
+            send_id("".join(map(str, map(hex, ret.tid[:ret.tid_length]))))
 
 if __name__ == "__main__":
-
-#    GPIO.setmode(GPIO.BOARD)
-#    GPIO.setup(PIN1, GPIO.OUT)
-#    GPIO.setup(PIN2, GPIO.OUT)
+    os.system("python /home/pi/aviabar-sensor/success-beep.py 1")
 
     ipcon = IPConnection() # Create IP connection
     nr = BrickletNFCRFID(UID, ipcon) # Create device object
@@ -124,5 +83,7 @@ if __name__ == "__main__":
     # Start scan loop
     nr.request_tag_id(nr.TAG_TYPE_MIFARE_CLASSIC)
 
-    raw_input("Press key to exit\n") # Use input() in Python 3
+    while True:
+        time.sleep(1)
+
     ipcon.disconnect()

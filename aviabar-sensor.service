@@ -1,0 +1,14 @@
+[Unit]
+Description=A python script that read the RFID sensor and posts IDs
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python -u /home/pi/aviabar-sensor/rfid.py
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target
