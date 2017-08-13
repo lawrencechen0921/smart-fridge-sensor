@@ -10,6 +10,8 @@
 
 ## Configuration
 
+Create a config.yml with the following content:
+
     tinkerforge:
       host: localhost
       port: 4223
