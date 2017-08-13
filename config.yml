@@ -5,4 +5,5 @@ tinkerforge:
 
 backend:
   url: https://aviabar.herokuapp.com/api/purchases
-  salt: 1234567890
+  salt: "1234567890"
+  timeout: 5.1

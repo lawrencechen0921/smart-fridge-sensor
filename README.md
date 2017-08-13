@@ -21,6 +21,7 @@ Create a `config.yml` with the following content:
     backend:
       url: https://aviatar-fridge.herokuapp.com/api/purchases
       salt: 1234567890
+      timeout: 5.0
 
 ## Run
 On your Pi run `py rfid-sensor.py`.

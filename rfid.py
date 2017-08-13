@@ -27,6 +27,7 @@ UID =  str(cfg['tinkerforge']['uid'])
 
 HTTP_BACKEND = str(cfg['backend']['url'])
 SALT = str(cfg['backend']['salt'])
+TIMEOUT = cfg['backend']['timeout']
 
 print "-----------------"
 print "NFC / RFID Sensor"
@@ -53,7 +54,7 @@ def send_id(id):
         print("Sending ID: '" + id + "', Time: " + timestamp  + ", Signature: '" + signature + "'")
         blocked = True
         # Send id to backend
-        response = requests.post(HTTP_BACKEND, data={'id': id, 'time': timestamp, 'signature': signature }, timeout=10.0)
+        response = requests.post(HTTP_BACKEND, data={'id': id, 'time': timestamp, 'signature': signature }, timeout=TIMEOUT)
         # React on errors
         response.raise_for_status()
         # Check status
@@ -61,13 +62,15 @@ def send_id(id):
             print("Success.")
         else:
             print("Unexpected status code received: ", response.status_code, response.reason)
-        blocked = False
 
-    except requests.exceptions.HTTPError as err:
+    except Exception as err:
         os.system("python " + FAIL_SCRIPT + " 1")
-        blocked = False
         print ("Error occured.")
         print err
+    finally:
+        blocked = False
+               
+
 
 #
 # Callback function for state changed callback
