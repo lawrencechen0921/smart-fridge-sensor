@@ -9,3 +9,12 @@
 - pip install datetime
 
 ## Configuration
+
+    tinkerforge:
+      host: localhost
+      port: 4223
+      uid: uuV
+
+    backend:
+      url: https://aviatar-fridge.herokuapp.com/api/purchases
+      salt: 1234567890

@@ -1,15 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-HOST = "localhost"
-PORT = 4223
-# UID = "uvB" # PLayground
-UID = "uuV" # UID of your NFC/RFID Bricklet
-HTTP_BACKEND = "https://aviatar-fridge.herokuapp.com/api/purchases"
-SALT = "1234567890"
-PIN1 = 7
-PIN2 = 15
-
 # Frequencies
 c = 261
 d = 294
@@ -23,6 +14,7 @@ r = 1
 
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_nfc_rfid import BrickletNFCRFID
+import yaml
 import requests
 import time
 import hmac
@@ -32,6 +24,25 @@ import time
 import datetime
 # import RPi.GPIO as GPIO
 
+
+with open("config.yml", 'r') as ymlfile:
+    cfg = yaml.load(ymlfile)
+
+HOST = cfg['tinkerforge']['host']
+PORT = cfg['tinkerforge']['port']
+# UID = "uvB" # PLayground
+UID =  cfg['tinkerforge']['uid'] # UID of your NFC/RFID Bricklet
+
+HTTP_BACKEND = cfg['backend']['url']
+SALT = cfg['backend']['salt']
+PIN1 = 7
+PIN2 = 15
+print "-----------------"
+print "NFC / RFID Sensor"
+print "-----------------"
+print "Sensor " + UID + '@' + HOST + ":" +str(PORT)
+print "Backend " + HTTP_BACKEND
+print "-----------------"
 tag_type = 0
 
 # pwm = GPIO.PWM(PIN2, 100)
@@ -107,6 +118,7 @@ def cb_state_changed(state, idle, nr):
         send_id("".join(map(str, map(hex, ret.tid[:ret.tid_length]))))
 
 if __name__ == "__main__":
+
 
 #    GPIO.setmode(GPIO.BOARD)
 #    GPIO.setup(PIN1, GPIO.OUT)
