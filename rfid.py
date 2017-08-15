@@ -23,7 +23,6 @@ with open(PATH + "/config.yml", 'r') as ymlfile:
 
 HOST = cfg['tinkerforge']['host']
 PORT = cfg['tinkerforge']['port']
-# UID = "uvB" # PLayground
 UID =  cfg['tinkerforge']['uid'] # UID of your NFC/RFID Bricklet
 
 HTTP_BACKEND = cfg['backend']['url']
