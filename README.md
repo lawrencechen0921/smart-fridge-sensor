@@ -16,10 +16,17 @@ SystemCtl or Systemd service.
 
 - python
 - pip
-- pip install tinkerforge
-- pip install requests
-- pip install datetime
+- pip install tinkerforge requests datetime yml
 
 ## Configuration
 
-## Sensor Component (Python)
+Configuration is done via `config.yml` file.
+
+      tinkerforge:
+            host: localhost
+            port: 4223
+            uid: uuV
+
+      backend:
+            url: https://aviabar.herokuapp.com/api/purchases
+            salt: 1234567890

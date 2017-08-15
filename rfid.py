@@ -10,15 +10,30 @@ import base64
 import datetime
 import time
 import os
+import yaml
 
-HOST = "localhost"
-PORT = 4223
-UID = "uuV" # UID of your NFC/RFID Bricklet
-HTTP_BACKEND = "https://aviabar.herokuapp.com/api/purchases"
-SALT = "1234567890"
 PATH = os.path.dirname(os.path.abspath(__file__))
 SUCCESS_SCRIPT = PATH + "/success-beep.py"
 FAIL_SCRIPT = PATH + "/error-beep.py"
+
+with open(PATH + "/config.yml", 'r') as ymlfile:
+    cfg = yaml.load(ymlfile)
+
+HOST = cfg['tinkerforge']['host']
+PORT = cfg['tinkerforge']['port']
+# UID = "uvB" # PLayground
+UID =  cfg['tinkerforge']['uid'] # UID of your NFC/RFID Bricklet
+
+HTTP_BACKEND = cfg['backend']['url']
+SALT = cfg['backend']['salt']
+
+print "-----------------"
+print "NFC / RFID Sensor"
+print "-----------------"
+print "Sensor " + UID + '@' + HOST + ":" +str(PORT)
+print "Backend " + HTTP_BACKEND
+print "-----------------"
+
 
 tag_type = 0
 blocked = False

@@ -1,0 +1,8 @@
+tinkerforge:
+  host: localhost
+  port: 4223
+  uid: uuV
+
+backend:
+  url: https://aviabar.herokuapp.com/api/purchases
+  salt: 1234567890
