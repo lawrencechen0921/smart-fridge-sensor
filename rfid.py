@@ -8,7 +8,6 @@ import hmac
 import hashlib
 import base64
 import datetime
-import RPi.GPIO as GPIO
 import time
 import os
 
@@ -17,6 +16,10 @@ PORT = 4223
 UID = "uuV" # UID of your NFC/RFID Bricklet
 HTTP_BACKEND = "https://aviabar.herokuapp.com/api/purchases"
 SALT = "1234567890"
+PATH = os.path.dirname(os.path.abspath(__file__))
+SUCCESS_SCRIPT = PATH + "/success-beep.py"
+FAIL_SCRIPT = PATH + "/error-beep.py"
+
 tag_type = 0
 blocked = False
 
@@ -25,7 +28,7 @@ blocked = False
 #
 def send_id(id):
     try:
-        os.system("python /home/pi/aviabar-sensor/success-beep.py 1")
+        os.system("python " + SUCCESS_SCRIPT + " 1")
         timestamp = str(datetime.datetime.now())
         # Calcualte signature
         digest = hmac.new(SALT, msg=id + timestamp, digestmod=hashlib.sha256).digest()
@@ -43,9 +46,9 @@ def send_id(id):
         else:
             print("Unexpected status code received: ", response.status_code, response.reason)
         blocked = False
-        
+
     except requests.exceptions.HTTPError as err:
-        os.system("python /home/pi/aviabar-sensor/error-beep.py 1")
+        os.system("python " + FAIL_SCRIPT + " 1")
         blocked = False
         print ("Error occured.")
         print err
@@ -62,14 +65,19 @@ def cb_state_changed(state, idle, nr):
 
     if state == nr.STATE_REQUEST_TAG_ID_READY:
         ret = nr.get_tag_id()
-        print("Detected tag of type " + str(ret.tag_type) + " with ID [" + " ".join(map(str, map(hex, ret.tid[:ret.tid_length]))) + "]")
+        id = "".join(map(str, map(hex, ret.tid[:ret.tid_length])))
+        print("Detected tag with ID [" + id + "]")
         if blocked:
             print("Blocking duplicate read.")
         else:
-            send_id("".join(map(str, map(hex, ret.tid[:ret.tid_length]))))
+            send_id(id)
 
+#
+# Main
+#
 if __name__ == "__main__":
-    os.system("python /home/pi/aviabar-sensor/success-beep.py 1")
+
+    os.system("python " + SUCCESS_SCRIPT + " 1")
 
     ipcon = IPConnection() # Create IP connection
     nr = BrickletNFCRFID(UID, ipcon) # Create device object
