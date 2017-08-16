@@ -21,12 +21,12 @@ FAIL_SCRIPT = PATH + "/error-beep.py"
 with open(PATH + "/config.yml", 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
 
-HOST = cfg['tinkerforge']['host']
+HOST = str(cfg['tinkerforge']['host'])
 PORT = cfg['tinkerforge']['port']
-UID =  cfg['tinkerforge']['uid'] # UID of your NFC/RFID Bricklet
+UID =  str(cfg['tinkerforge']['uid']) # UID of your NFC/RFID Bricklet
 
 HTTP_BACKEND = cfg['backend']['url']
-SALT = cfg['backend']['salt']
+SALT = str(cfg['backend']['salt'])
 
 print "-----------------"
 print "NFC / RFID Sensor"

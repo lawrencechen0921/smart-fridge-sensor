@@ -6,9 +6,9 @@ a request to the backend as soon a card has been detected.
 
 ## Installation
 
-- python
-- pip
-- pip install tinkerforge requests datetime yml
+- `apt-get install python`
+- `apt-get install pip`
+- `pip install tinkerforge requests datetime pyyml`
 
 ## Configuration
 Create a `config.yml` with the following content:
