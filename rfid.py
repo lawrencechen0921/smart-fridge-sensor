@@ -23,9 +23,9 @@ with open(PATH + "/config.yml", 'r') as ymlfile:
 
 HOST = str(cfg['tinkerforge']['host'])
 PORT = cfg['tinkerforge']['port']
-UID =  str(cfg['tinkerforge']['uid']) # UID of your NFC/RFID Bricklet
+UID =  str(cfg['tinkerforge']['uid'])
 
-HTTP_BACKEND = cfg['backend']['url']
+HTTP_BACKEND = str(cfg['backend']['url'])
 SALT = str(cfg['backend']['salt'])
 
 print "-----------------"
@@ -89,17 +89,47 @@ def cb_state_changed(state, idle, nr):
             send_id(id)
 
 #
+# Connection handler for logging
+#
+def cb_connected(connect_reason):
+    if connect_reason == IPConnection.CONNECT_REASON_REQUEST:
+        print("Connected by request.")
+    elif connect_reason == IPConnection.CONNECT_REASON_AUTO_RECONNECT:
+        print("Auto-Reconnect.")
+
+#
+# Disconnection handler for logging
+#
+def cb_disconnected(disconnect_reason):
+    if disconnect_reason == IPConnection.DISCONNECT_REASON_REQUEST:
+        print("Disconnected by request.")
+    elif disconnect_reason == IPConnection.DISCONNECT_REASON_ERROR:
+        print("Disconnected by error.")
+    elif disconnect_reason == IPConnection.DISCONNECT_REASON_SHUTDOWN:
+        print("Disconnected by shutdown of IPConnection (Daemon).")
+
+#
 # Main
 #
 if __name__ == "__main__":
 
     os.system("python " + SUCCESS_SCRIPT + " 1")
 
-    ipcon = IPConnection() # Create IP connection
-    nr = BrickletNFCRFID(UID, ipcon) # Create device object
+    # Create IP connection
+    ipcon = IPConnection()
 
-    ipcon.connect(HOST, PORT) # Connect to brickd
-    # Don't use device before ipcon is connected
+    # Create device object
+    nr = BrickletNFCRFID(UID, ipcon)
+
+    # Reconnect automatically
+    ipcon.set_auto_reconnect(True)
+
+    # Register logging handlers
+    ipcon.register_callback(IPConnection.CALLBACK_CONNECTED, cb_connected)
+    ipcon.register_callback(IPConnection.CALLBACK_DISCONNECTED, cb_disconnected)
+
+    # Connect to brickd
+    ipcon.connect(HOST, PORT)
 
     # Register state changed callback to function cb_state_changed
     nr.register_callback(nr.CALLBACK_STATE_CHANGED, lambda x, y: cb_state_changed(x, y, nr))
